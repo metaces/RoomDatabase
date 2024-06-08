@@ -9,7 +9,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.textfield.TextInputEditText
 
 class CreateCategoryBottomSheet(
-    private val onCreateClicked: (String)-> Unit): BottomSheetDialogFragment() {
+    private val onCreateClicked: (String)-> Unit):
+    BottomSheetDialogFragment() {
 
 
 
