@@ -2,11 +2,9 @@ package com.devspace.taskbeats
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -51,8 +49,8 @@ class MainActivity : AppCompatActivity() {
             showCreateUpdateTaskBottomSheet()
         }
 
-        taskAdapter.setOnClickListener {
-            showCreateUpdateTaskBottomSheet()
+        taskAdapter.setOnClickListener {task ->
+            showCreateUpdateTaskBottomSheet(task)
         }
 
         categoryAdapter.setOnClickListener { selected ->
@@ -101,18 +99,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showCreateUpdateTaskBottomSheet() {
-        val createTaskBottomSheet = CreateTaskBottomSheet(
-            categories
-        ) { taskToBeCreated ->
-            val taskEntityToBeInsert = TaskEntity(
-                name = taskToBeCreated.name,
-                category = taskToBeCreated.category
-            )
-            insertTask(taskEntityToBeInsert)
-        }
+    private fun showCreateUpdateTaskBottomSheet(taskUiData: TaskUiData? = null) {
+        val createUpdateTaskBottomSheet = CreateUpdateTaskBottomSheet(
+            task = taskUiData,
+            categoryList =  categories,
+            onCreateClicked = {taskToBeCreated ->
+                val taskEntityToBeInsert = TaskEntity(
+                    name = taskToBeCreated.name,
+                    category = taskToBeCreated.category
+                )
+                insertTask(taskEntityToBeInsert)
+            },
+            onUpdateClicked = {taskToBeUpdated ->
+                val taskEntityToBeUpdate = TaskEntity(
+                    id = taskToBeUpdated.id,
+                    name = taskToBeUpdated.name,
+                    category = taskToBeUpdated.category
+                )
+                updateTask(taskEntityToBeUpdate)
+            }
+        )
 
-        createTaskBottomSheet.show(supportFragmentManager, "createTaskBottomSheet")
+        createUpdateTaskBottomSheet.show(supportFragmentManager, "createTaskBottomSheet")
     }
 
     private fun inserDefaultCategory() {
@@ -193,6 +201,13 @@ class MainActivity : AppCompatActivity() {
     private fun insertTask(taskEntity: TaskEntity) {
         GlobalScope.launch(Dispatchers.IO) {
             taskDao.insert(taskEntity)
+            getTasksDataBase()
+        }
+    }
+
+    private fun updateTask(taskEntity: TaskEntity) {
+        GlobalScope.launch(Dispatchers.IO) {
+            taskDao.update(taskEntity)
             getTasksDataBase()
         }
     }
