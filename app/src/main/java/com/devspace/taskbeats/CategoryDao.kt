@@ -1,6 +1,7 @@
 package com.devspace.taskbeats
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -16,4 +17,6 @@ interface CategoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(categoryEntities: CategoryEntity)
 
+    @Delete
+    fun delete(categoryEntities: CategoryEntity)
 }
