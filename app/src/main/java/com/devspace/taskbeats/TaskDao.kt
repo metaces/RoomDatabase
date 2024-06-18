@@ -17,8 +17,16 @@ interface TaskDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(taskEntity: TaskEntity)
+
     @Update
     fun update(taskEntity: TaskEntity)
+
     @Delete
     fun delete(taskEntity: TaskEntity)
+
+    @Query("Select * from taskentity where category is :categoryName")
+    fun getAllByCategory(categoryName: String): List<TaskEntity>
+
+    @Delete
+    fun deleteAll(taskEntity: List<TaskEntity>)
 }

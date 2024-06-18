@@ -54,11 +54,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         categoryAdapter.setOnLongClickListener {categoryToBeDeleted ->
-            val categoryEntityToBeDelete = CategoryEntity(
-                categoryToBeDeleted.name,
-                categoryToBeDeleted.isSelected
-            )
-            deleteCategory(categoryEntityToBeDelete)
+
+            if( categoryToBeDeleted.name != "+") {
+                val title: String = this.getString(R.string.category_delete_title)
+                val description: String = this.getString(R.string.category_delete_description)
+                val btnText: String = this.getString(R.string.delete)
+
+                showInfoDialog(title, description, btnText) {
+                    val categoryEntityToBeDelete = CategoryEntity(
+                       categoryToBeDeleted.name,
+                       categoryToBeDeleted.isSelected
+                   )
+                   deleteCategory(categoryEntityToBeDelete)
+                }
+            }
         }
 
         categoryAdapter.setOnClickListener { selected ->
@@ -76,8 +85,11 @@ class MainActivity : AppCompatActivity() {
 
                 val categoryTemp = categories.map { item ->
                     when {
+                        item.name == selected.name && item.isSelected -> item.copy(isSelected = true)
+
                         item.name == selected.name && !item.isSelected -> item.copy(isSelected = true)
-                        item.name == selected.name && item.isSelected -> item.copy(isSelected = false)
+
+                        item.name != selected.name && item.isSelected -> item.copy(isSelected = false)
                         else -> item
                     }
                 }
@@ -170,9 +182,17 @@ class MainActivity : AppCompatActivity() {
                 isSelected = false
             )
         )
+        val categoryListTemp =  mutableListOf(
+            CategoryUiData(
+                name = "All",
+                isSelected = true
+            )
+        )
+
+        categoryListTemp.addAll(categoriesUiData)
         GlobalScope.launch(Dispatchers.Main) {
-            categories = categoriesUiData
-            categoryAdapter.submitList(categoriesUiData)
+            categories = categoryListTemp
+            categoryAdapter.submitList(categories)
         }
 
     }
@@ -216,8 +236,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun deleteCategory(categoryEntity: CategoryEntity) {
         GlobalScope.launch(Dispatchers.IO) {
+            val tasksToBeDeleted = taskDao.getAllByCategory(categoryEntity.name)
+            taskDao.deleteAll(tasksToBeDeleted)
             categoryDao.delete(categoryEntity)
             getCategoriesDataBase()
+            getTasksDataBase()
         }
     }
 
@@ -240,5 +263,22 @@ class MainActivity : AppCompatActivity() {
             taskDao.delete(taskEntity)
             getTasksDataBase()
         }
+    }
+
+    private fun showInfoDialog(
+        title: String,
+        description: String,
+        btnText: String,
+        onClick: () -> Unit
+    ) {
+        val infoBottomSheet = InfoBottomSheet(
+            title = title,
+            description = description,
+            btnText = btnText,
+            onClicked = onClick
+        )
+
+        infoBottomSheet.show(supportFragmentManager, "InfoBottomSheet")
+
     }
 }
