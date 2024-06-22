@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private var categories = listOf<CategoryUiData>()
+    private var categoriesEntity = listOf<CategoryEntity>()
     private var tasks = listOf<TaskUiData>()
 
     private val categoryAdapter = CategoryListAdapter()
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 
         categoryAdapter.setOnLongClickListener {categoryToBeDeleted ->
 
-            if( categoryToBeDeleted.name != "+") {
+            if( categoryToBeDeleted.name != "+" && categoryToBeDeleted.name != "ALL" ) {
                 val title: String = this.getString(R.string.category_delete_title)
                 val description: String = this.getString(R.string.category_delete_description)
                 val btnText: String = this.getString(R.string.delete)
@@ -94,13 +95,14 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                val taskTemp =
-                    if (selected.name != "ALL" ) {
-                        tasks.filter { it.category == selected.name }
-                    } else {
-                        tasks
+                if (selected.name != "ALL" ) {
+                    filterCategory(selected.name)
+//                    tasks.filter { it.category == selected.name }
+                } else {
+                    GlobalScope.launch(Dispatchers.IO) {
+                        getTasksDataBase()
                     }
-                taskAdapter.submitList(taskTemp)
+                }
                 categoryAdapter.submitList(categoryTemp)
             }
 
@@ -122,7 +124,7 @@ class MainActivity : AppCompatActivity() {
     private fun showCreateUpdateTaskBottomSheet(taskUiData: TaskUiData? = null) {
         val createUpdateTaskBottomSheet = CreateUpdateTaskBottomSheet(
             task = taskUiData,
-            categoryList =  categories,
+            categoryList =  categoriesEntity,
             onCreateClicked = {taskToBeCreated ->
                 val taskEntityToBeInsert = TaskEntity(
                     name = taskToBeCreated.name,
@@ -169,6 +171,7 @@ class MainActivity : AppCompatActivity() {
     private fun getCategoriesDataBase() {
 
         val categoriesDb = categoryDao.getAll()
+        categoriesEntity = categoriesDb
         val categoriesUiData = categoriesDb.map {
             CategoryUiData(
                 name = it.name,
@@ -231,6 +234,23 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch(Dispatchers.IO) {
             categoryDao.insert(categoryEntity)
             getCategoriesDataBase()
+        }
+    }
+
+    private fun filterCategory(name: String) {
+        GlobalScope.launch(Dispatchers.IO) {
+            val tasksFromDataBase = taskDao.getAllByCategory(name)
+            val taskUiData = tasksFromDataBase.map {
+                TaskUiData(
+                    id = it.id,
+                    name = it.name,
+                    category = it.category
+                )
+            }
+            GlobalScope.launch(Dispatchers.Main) {
+//                tasks = taskUiData
+                taskAdapter.submitList(taskUiData)
+            }
         }
     }
 

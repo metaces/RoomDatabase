@@ -16,7 +16,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 
 class CreateUpdateTaskBottomSheet(
-    private val categoryList: List<CategoryUiData>,
+    private val categoryList: List<CategoryEntity>,
     private val task: TaskUiData? = null,
     private val onCreateClicked: (TaskUiData)-> Unit,
     private val onUpdateClicked: (TaskUiData)-> Unit,
@@ -37,7 +37,11 @@ class CreateUpdateTaskBottomSheet(
         val tieTaskName = view.findViewById<TextInputEditText>(R.id.tie_task_name)
         val spinner: Spinner = view.findViewById(R.id.spinner_category_list)
 
-        val categoryStr: List<String> = categoryList.map { it.name }
+        val categoryListTemp = mutableListOf<String>("Select")
+        categoryListTemp.addAll(
+            categoryList.map { it.name }
+        )
+        val categoryStr: List<String> = categoryListTemp
         var taskCategory: String? = null
 
         // Create an ArrayAdapter using the string array and a default spinner layout.
@@ -94,7 +98,7 @@ class CreateUpdateTaskBottomSheet(
 
         btnCreateUpdate.setOnClickListener {
             val name = tieTaskName.text.toString()
-            if (taskCategory != null && name.trim().isNotEmpty()){
+            if (taskCategory != "Select" && name.trim().isNotEmpty()){
 
                 if (task == null) {
                     onCreateClicked.invoke(
